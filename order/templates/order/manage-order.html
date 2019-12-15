@@ -1,0 +1,113 @@
+{% extends "base-sider.html" %}
+{% load static %}
+
+{% block css %}
+    <link href="{% static 'css/bootstrap-table.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/manage-order.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4>查询订单</h4>
+        </div>
+        <div class="panel-body">
+            <form id="search-order-form" action="export/" method="POST">
+                <div class="row">
+                    <div class="col-sm-6 form-group">
+                        <label for="order_id">订单号</label>
+                        <input type="text" class="form-control" id="order_id" name="order_id" placeholder="输入订单号">
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label for="order-status">订单状态</label>
+                        <select id="order-status" class="form-control" name="status">
+                            <option value="">---</option>
+                            {% for status in status_lst %}
+                            <option value="{{ status.0 }}">{{ status.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 form-group">
+                        <label for="from_create_time">订单起始时间</label>
+                        <input type="text" class="form-control bdatetime" id="from_create_time" name="from_create_time" placeholder="输入起始时间">
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label for="to_create_time">订单截止时间</label>
+                        <input type="text" class="form-control bdatetime" id="to_create_time" name="to_create_time" placeholder="输入截止时间">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 form-group">
+                        <label for="user-mail">用户邮箱</label>
+                        <input type="text" class="form-control" id="user-mail" name="mail" placeholder="输入用户邮箱">
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label for="user-phone">用户手机</label>
+                        <input type="text" class="form-control" id="user-phone" name="phone" placeholder="输入用户手机">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 form-group">
+                        <label for="good-id">商品ID</label>
+                        <input type="text" class="form-control" id="good-id" name="good_id" placeholder="输入商品ID">
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label for="good-title">商品名称</label>
+                        <input type="text" class="form-control" id="good-title" name="title" placeholder="输入商品名称">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="search-order-table-toolbox">
+        <button class="btn btn-default" onclick="search_order()"><span class="glyphicon glyphicon-search"></span> 查询</button>
+        <button class="btn btn-default" onclick="to_report()"><span class="glyphicon glyphicon-upload"></span> 以下结果生成报表</button>
+        <a type="button" class="btn btn-default" href="export/"><span class="glyphicon glyphicon-search"></span> 查看已生成的报表</a>
+    </div>
+    <table id="order-table"></table>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/bootstrap-table.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap-table-zh-CN.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap-datetimepicker.js' %}"></script>
+    <script src="{% static 'js/manage-order.js' %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $(".bdatetime").datetimepicker({
+                minView: 0,
+                startView: 2,
+                autoclose: 1,
+                format: 'yyyy-mm-dd hh:ii'
+                // startDate: new Date(new Date().getTime()).format("yyyy-MM-dd hh:mm")
+            });
+        });
+        function search_order() {
+            $("#order-table").bootstrapTable("refresh");
+        }
+        function to_report() {
+            if (confirm("确定对以上条件生成报表？")) {
+                $.ajax({
+                    url: "export/",
+                    method:  "POST",
+                    dataType: "json",
+                    data: $("#search-order-form").serialize(),
+                    timeout: 10000,
+                }).done(function (res) {
+                    if(res.code === 0){
+                        window.location.href = res.redirect;
+
+                    }
+                    else{
+
+                    }
+                }).fail(function (e) {
+                    console.error(e);
+                    alert("提交失败，请稍后重试")
+                })
+            }
+        }
+    </script>
+{% endblock %}

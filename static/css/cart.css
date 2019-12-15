@@ -1,0 +1,14 @@
+body{
+    padding-top: 50px;
+}
+
+.sum{
+    border-top: 1px solid #ddd;
+    padding-top: 30px;
+    line-height: 2.3;
+}
+
+.address-item{
+    float: left;
+}
+

@@ -1,0 +1,100 @@
+{% extends "base-sider.html" %}
+{% load static %}
+
+{% block css %}
+    <link href="{% static 'css/shop-item.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="row">
+
+                <img width="700" id="main-image" src="/{{ good.first_image_url }}">
+            </div>
+
+            <div id="content">
+                {% for image in good.images %}
+                <article class="post-152 post type-post status-publish format-standard hentry category-people category-photos">
+                    <div class="post-format-content">
+                        <div class="post-thumbnail">
+                            <img width="480" height="640" src="/{{ image.image.img.url }}" class="attachment-thumbnail wp-post-image" alt="" data-id="{{ image.image.id }}">
+                        </div>
+                        <div class="content-wrap">
+                            <h1 class="entry-title">
+                                <a class="featured-image" rel="bookmark" onclick="show_img(this)">查看大图</a>
+                            </h1>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-lg-4">
+            {% if user.is_authenticated and user.is_admin %}<a href="/manager/good/{{ good.id }}/">进入编辑模式</a>{% endif %}
+            <div class="product-titles">
+                <h2 class="title">{{ good.title }}</h2>
+                <h3 class="product-price">￥{{ good.price }}</h3>
+            </div>
+            <div class="product product-text">
+                {% autoescape off %}
+                {{ good.content }}
+                {% endautoescape %}
+            </div>
+            <div class="product-detail">
+                <form>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <select name="size" class="form-control" id="size">
+                                <option value="">---</option>
+                                {% for size in good.sizes %}
+                                <option value="{{ size.size }}" {% if size.amount == 0 %}disabled="disabled"{% endif %}>{{ size.size }}/库存{{ size.amount }}件</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-lg-6">
+                            <button type="button" class="btn btn-sm btn-default btn-block" onclick="add_cart()">加入购物车</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        function show_img(that) {
+            $("#main-image").attr("src", $(that).parents("article").find("img").attr("src"));
+        }
+
+        function add_cart() {
+            let size = $("#size").val();
+            if (size === "")
+            {
+                alert("请选择码数");
+                return;
+            }
+            $.ajax({
+                url: "add_cart",
+                dataType:"json",
+                data:{size: size},
+                method: "POST",
+                timeout:5000
+            }).done(function (res) {
+                if(res.code === 0){
+                    alert("加入成功");
+                }
+                else if (res.code === 1){
+                    alert(res.msg);
+                }
+                else{
+                    deal_res_code(res);
+                }
+            }).fail(function (e) {
+                alert("加入失败，请重试");
+                console.log(e);
+            })
+        }
+    </script>
+{% endblock %}

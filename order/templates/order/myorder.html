@@ -1,0 +1,54 @@
+{% extends "base-sider.html" %}
+{% load static %}
+
+{% block css %}
+    <link href="{% static 'css/my-order.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <div class="order-container">
+        <ul>
+            {% for order in orders %}
+            <li>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <td>订单号：{{ order.id }}</td>
+
+                            <td colspan="2"><div class="text-right">{{ order.get_status_display }}</div></td>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.order_item %}
+                        <tr>
+                            <td><img width="120" id="main-image" src="/{{ item.good.first_image_url }}"></td>
+                            <td>
+                                <div class="text-left">
+                                    <div class="titles">{{ item.good.title }}</div>
+                                    <div>{{ item.size }}</div>
+                                    <div class="price">￥{{ item.good.price }}</div>
+                                </div>
+                            </td>
+                            <td>&times; {{ item.amount }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td>订单金额：￥{{ order.cash }}</td>
+                            <td colspan="2">
+                                <div class="text-right">
+                                    <a type="button" class="btn btn-sm btn-default" href="{{ order.id }}/">查看订单详情</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}
+{% block js %}
+{% endblock %}

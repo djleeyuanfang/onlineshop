@@ -1,0 +1,163 @@
+{% extends "base-sider.html" %}
+{% load static %}
+
+{% block css %}
+    <style>
+        tbody > tr > td > div{
+            display: inline;
+            font-size: 2em;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="panel-default">
+        <div class="panel-heading"><h3>销售状态</h3></div>
+        <div class="panel-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <td>待付款</td>
+                        <td>待发货</td>
+                        <td>待收货</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><div>{{ summit_count }}</div> 单</td>
+                        <td><div>{{ pay_count }}</div> 单</td>
+                        <td><div>{{ ship_count }}</div> 单</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="panel-default">
+        <div class="panel-heading"><h3>销售统计</h3></div>
+        <div class="panel-body">
+            <ul style="list-style-type:none;">
+                <li>
+                    <table class="table" id="trade-table">
+                        <caption>
+                            <h4 style="display: inline;">交易数据：</h4>
+                            <form style="display: inline;" class="form-inline">
+                            <input type="text" class="bdatetime" readonly="readonly" name="from_time">
+                            -
+                            <input type="text" class="bdatetime" readonly="readonly" name="to_time">
+                            <button type="button" class="btn btn-sm btn-default" onclick="trade()">查询</button>
+                            </form>
+                        </caption>
+                        <thead>
+                            <tr>
+                                <td>成交件数</td>
+                                <td>成交金额</td>
+                                <td>买家数量</td>
+                                <td>客单价</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><div id="total_amount">0</div> 件</td>
+                                <td><div id="total_cash">1</div> 元</td>
+                                <td><div id="trade_user_count">1</div></td>
+                                <td><div id="user_price">1</div> 元</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </li>
+                <li>
+                    <table class="table" id="good-table">
+                        <caption>
+                            <h4 style="display: inline;">商品数据：</h4>
+                            <form style="display: inline;" class="form-inline">
+                            <input type="text" class="bdatetime" readonly="readonly" name="from_time">
+                            -
+                            <input type="text" class="bdatetime" readonly="readonly" name="to_time">
+                            <button type="button" class="btn btn-sm btn-default" onclick="good()">查询</button>
+                            </form>
+                        </caption>
+                        <thead>
+                            <tr>
+                                <td>商品访客数</td>
+                                <td>商品浏览量</td>
+                                <td>被访问商品数</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><div id="good_user_count">0</div></td>
+                                <td><div id="good_track_count">0</div></td>
+                                <td><div id="good_visit_count">0</div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </li>
+            </ul>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/bootstrap-datetimepicker.js' %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $(".bdatetime").datetimepicker({
+                minView: 0,
+                startView: 2,
+                autoclose: 1,
+                format: 'yyyy-mm-dd hh:ii'
+                // startDate: new Date(new Date().getTime()).format("yyyy-MM-dd hh:mm")
+            });
+            // 默认统计今日数据
+            let now_str = new Date().format("yyyy-MM-dd hh:mm");
+            let today_begin_str = new Date(new Date(new Date().toLocaleDateString()).getTime()).format("yyyy-MM-dd hh:mm");
+            $("[name='from_time']").val(today_begin_str);
+            $("[name='to_time']").val(now_str);
+            trade();
+            good();
+        });
+
+        function trade() {
+            $.ajax({
+                url: "trade/",
+                dataType: "json",
+                data:$("#trade-table").find("form").serialize(),
+                method: "GET",
+                timeout: 5000,
+            }).done(function (res) {
+                if(res.code === 0){
+                    for(let k in res.data){
+                        $("#" + k).text(res.data[k]);
+                    }
+                }
+                else{
+                    alert(res.msg);
+                }
+            }).fail(function (e) {
+                console.error(e);
+                alert("查询失败");
+            })
+        }
+        function good() {
+            $.ajax({
+                url: "good/",
+                dataType: "json",
+                data:$("#good-table").find("form").serialize(),
+                method: "GET",
+                timeout: 5000,
+            }).done(function (res) {
+                if(res.code === 0){
+                    for(let k in res.data){
+                        $("#" + k).text(res.data[k]);
+                    }
+                }
+                else{
+                    alert(res.msg);
+                }
+            }).fail(function (e) {
+                console.error(e);
+                alert("查询失败");
+            })
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "base-sider.html" %}
+{% load static %}
+
+{% block css %}
+    <link href="{% static 'css/login.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <form class="form-signin" id="register-form">
+        <label for="inputEmail" class="sr-only">邮箱地址</label>
+        <input type="email" id="inputEmail" name="mail" class="form-control" placeholder="邮箱地址" required autofocus>
+        <label for="inputMailCode" class="sr-only">邮箱验证码</label>
+        <input type="text" id="inputMailCode" name="mail_code" class="form-control register-hide" placeholder="邮箱验证码" required hidden="hidden">
+        <label for="inputPassword" class="sr-only">设置密码</label>
+        <input type="password" id="inputPassword" name="passwd" class="form-control register-hide" placeholder="设置密码" required hidden="hidden">
+        <label for="inputPhone" class="sr-only">手机号码</label>
+        <input type="text" id="inputPhone" name="phone" class="form-control register-hide" placeholder="设置手机号" hidden="hidden">
+        <button type="button" class="btn btn-lg btn-default btn-block code-hide" id="mailCode">发送邮箱验证码</button>
+        <button type="button" class="btn btn-lg btn-default btn-block register-hide" id="register">注册或更改密码</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $(".register-hide").hide();
+
+            $("#mailCode").click(function () {
+                $(".code-hide").hide();
+                $.ajax({
+                    url: "/login/mail_code/",
+                    method: "POST",
+                    data: {mail: $("#inputEmail").attr("readonly", "readonly").val()},
+                    timeout:20000
+                }).done(function (res) {
+                    $(".register-hide").show();
+                    if (res.code === 0){
+
+                    }
+                    else{
+                        alert(res.msg);
+                    }
+                }).fail(function (e) {
+                    console.log(e);
+                    alert("失败，请重试");
+                    $(".code-hide").show();
+                    $("#inputEmail").attr("readonly", "");
+                })
+            });
+
+            $("#register").click(function () {
+                $.ajax({
+                    url: "",
+                    type: "POST",
+                    dataType:'json',
+                    data: $("#register-form").serialize(),
+                    timeout:5000,
+                }).done(function (res) {
+                    if (res.code === 0){
+                        alert(res.msg);
+                        window.location.href = res.redirect;
+                    }
+                }).fail(function (e) {
+                    alert("失败，请重试");
+                });
+            });
+        });
+    </script>
+{% endblock %}

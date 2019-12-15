@@ -1,0 +1,45 @@
+{% extends "base-sider.html" %}
+{% load static %}
+
+{% block css %}
+    <link href="{% static 'css/shop-item.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <div id="content">
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(document).ready(function () {
+            get_goods();
+        });
+
+        function get_goods() {
+            $.ajax({
+                url: "",
+                data: {
+                    page: 1
+                },
+                method: "GET",
+                dataType: "json",
+                timeout: 5000
+            }).done(function (res) {
+                if (res.code === 0){
+                    let list = res.list;
+                    for (let i = 0; i < list.length; i++){
+                        let good = list[i];
+                        let node = article_node();
+                        node.find("img").attr("src", "/" + good.first_image_url);
+                        node.find("a").attr("href", "/{% if to_manager_page %}manager/{% endif %}good/" + good.id + "/").text(good.title + " | ￥" + good.price);
+                        $("#content").append(node);
+                    }
+                }
+            }).fail(function (e) {
+                console.log(e);
+                alert("加载数据失败，请重试")
+            })
+        }
+    </script>
+{% endblock %}

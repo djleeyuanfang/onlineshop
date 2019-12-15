@@ -1,0 +1,455 @@
+{% extends "base-sider.html" %}
+{% load static %}
+
+{% block css %}
+    <link href="{% static 'css/shop-item.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="row">
+                <img width="700" id="main-image" src="/{{ good.first_image_url }}">
+            </div>
+            <div class="row">
+                <form hidden="hidden" id="upload-img-form"><input type="file" class="form-control" name="img" onchange="upload_img()"></form>
+                    <div class="col-lg-6">
+                        <button type="button" class="btn btn-lg btn-default btn-block" onclick="select_img()">添加照片</button>
+                    </div>
+                    <div class="col-lg-6">
+                        <button type="button" class="btn btn-lg btn-default btn-block" onclick="delete_img()">删除当前照片</button>
+                    </div>
+            </div>
+            <br>
+            <div id="cloud-images" hidden="hidden">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <h3 class="panel-title">选择图片</h3>
+                            </div>
+                            <div class="col-sm-4">
+                                <input class="form-control" type="text">
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="button" class="btn btn-sm btn-default btn-block" onclick="">搜索</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="dir-container">
+                            <div class="dir-op">
+                                <button type="button" class="btn btn-sm btn-default btn-block" onclick="new_dir()">新建收藏夹</button>
+                                <button type="button" class="btn btn-sm btn-default btn-block" onclick="remove_dir()">删除收藏夹</button>
+                            </div>
+                            <div id="dir-list">
+                                <ul>
+                                    {% for i_d in imageDir %}
+                                    <li><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span> <a onclick="select_dir(this)">{{ i_d.direction }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        <div id="show-images" data-page="0" onscroll="when_scroll(this, get_more_cloud_images)">
+
+                        </div>
+                    </div>
+                    <div class="panel-footer">
+                        <div class="row">
+                            <div class="col-sm-offset-8 col-sm-2">
+                                <button type="button" class="btn btn-sm btn-default btn-block" onclick="liulan_img()">上传照片</button>
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="button" class="btn btn-sm btn-default btn-block" onclick="shut_down_img()">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div id="content">
+                {% for image in good.images %}
+                <article class="post-152 post type-post status-publish format-standard hentry category-people category-photos">
+                    <div class="post-format-content">
+                        <div class="post-thumbnail">
+                            <img width="480" height="640" src="/{{ image.image.img.url }}" class="attachment-thumbnail wp-post-image" alt="" data-id="{{ image.image.id }}">
+                        </div>
+                        <div class="content-wrap">
+                            <h1 class="entry-title">
+                                <a class="featured-image" rel="bookmark" onclick="move_front(this)">向前移动</a>
+                                <a class="featured-image" rel="bookmark" onclick="show_img(this)">显示照片</a>
+                                <a class="featured-image" rel="bookmark" onclick="move_back(this)">向后移动</a>
+                            </h1>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="product product-op">
+                <div>当前草稿商品ID：<span id="good-id" class="label label-danger">{{ good.id }}</span></div>
+                {% if good.is_sell %}
+                <div class="row">
+                    <div class="col-lg-6">
+                        <button type="button" class="btn btn-sm btn-default btn-block" onclick="save_good(true)">更新信息</button>
+                    </div>
+                    <div class="col-lg-6">
+                        <button type="button" class="btn btn-sm btn-default btn-block" onclick="down_good()">下架商品</button>
+                    </div>
+                </div>
+                {% else %}
+                <div class="row">
+                    <div class="col-lg-4">
+                        <button type="button" class="btn btn-sm btn-default btn-block" onclick="save_good()">保存草稿</button>
+                    </div>
+                    <div class="col-lg-4">
+                        <button type="button" class="btn btn-sm btn-default btn-block" onclick="save_good(true)">上架商品</button>
+                    </div>
+                    <div class="col-lg-4">
+                        <button type="button" class="btn btn-sm btn-default btn-block" onclick="remove_good()">删除草稿</button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="product product-titles">
+                <h2 class="title" contenteditable="true">{{ good.title }}</h2>
+                <h3 class="product-price" contenteditable="true">￥{{ good.price }}</h3>
+            </div>
+            <div class="product product-label">
+                {% for c in style_collections %}
+                <span class="label label-{{ c.style }} {% if c.is_select %}select{% endif %}">{{c.collection.name}}</span>
+                {% endfor %}
+            </div>
+            <div class="product product-text">
+                {% autoescape off %}
+                {{ good.content }}
+                {% endautoescape %}
+                <a onclick="add_li()">添加说明项目</a>
+            </div>
+            <div class="product product-detail">
+                <form>
+                    <div class="row">
+                        <table class="table table-striped" id="size-table">
+                            <thead>
+                                <tr>
+                                    <td>码数</td>
+                                    <td>现存量</td>
+                                    <td>增减量</td>
+                                    <td>操作</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for size in good.sizes %}
+                                <tr>
+                                    <td contenteditable="true">{{ size.size }}</td>
+                                    <td>{{ size.amount }}</td>
+                                    <td contenteditable="true">0</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-default btn-block" onclick="size_move_up(this)">上移</button>
+                                        <button type="button" class="btn btn-sm btn-default btn-block" onclick="size_remove(this)">删除</button>
+                                        <button type="button" class="btn btn-sm btn-default btn-block" onclick="size_move_down(this)">下移</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div class="row">
+                            <div class="col-sm-offset-8 col-sm-4">
+                                <a onclick="add_size()">添加码数</a>
+
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+           $(".product-label span").click(function () {
+               $(this).toggleClass("select");
+           });
+
+           $(".product-text ul li").attr("contenteditable", "true");
+        });
+
+        function move_front(that) {
+             let self = $(that).parents("article");
+             let prev = self.prev();
+             if (prev.length !== 0){
+                 prev.before(self);
+             }
+        }
+
+        function move_back(that) {
+             let self = $(that).parents("article");
+             let next = self.next();
+             if (next.length !== 0){
+                 next.after(self);
+             }
+        }
+
+        function delete_img() {
+            let src = $("#main-image").attr("src");
+            console.log(src);
+            $("#content [src='"+ src+"']").parents("article").remove();
+        }
+
+        function show_img(that) {
+            $("#main-image").attr("src", $(that).parents("article").find("img").attr("src"));
+        }
+        function select_img() {
+            $("#cloud-images").slideDown();
+            // window.location.hash="#cloud-images";
+        }
+        function shut_down_img() {
+            $("#cloud-images").slideUp();
+        }
+        function liulan_img() {
+            $("[name='img']").trigger("click");
+        }
+        function add_size() {
+            $("#size-table").append('<tr>\n' +
+                '                                    <td contenteditable="true">输入码数</td>\n' +
+                '                                    <td>0</td>\n' +
+                '                                    <td contenteditable="true">输入数量</td>\n' +
+                '                                    <td>\n' +
+                '                                        <button type="button" class="btn btn-sm btn-default btn-block" onclick="size_move_up(this)">上移</button>\n' +
+                '                                        <button type="button" class="btn btn-sm btn-default btn-block" onclick="size_remove(this)">删除</button>\n' +
+                '                                        <button type="button" class="btn btn-sm btn-default btn-block" onclick="size_move_down(this)">下移</button>\n' +
+                '                                    </td>\n' +
+                '                                </tr>')
+        }
+        function size_move_up(that) {
+            let self = $(that).parents("tr");
+            let prev = self.prev();
+             if (prev.length !== 0){
+                 prev.before(self);
+             }
+        }
+        function size_move_down(that) {
+            let self = $(that).parents("tr");
+             let next = self.next();
+             if (next.length !== 0){
+                 next.after(self);
+             }
+        }
+
+        function size_remove(that) {
+            $(that).parents("tr").remove();
+        }
+        function add_li() {
+            $(".product-text ul").append('<li contenteditable="true" onblur="if_remove_li(this)">输入描述</li>')
+        }
+        function if_remove_li(that) {
+            let self = $(that);
+            if (self.text().length === 0){
+                self.remove();
+            }
+        }
+        function select_image_to_content(that) {
+            let img = $(that).parents("article").find("img");
+
+            let node = article_detail_node();
+            node.find("img").attr("src", img.attr("src"));
+            node.find("img").attr("data-id", img.attr("data-id"));
+            $("#content").append(node);
+            shut_down_img();
+        }
+
+        function upload_img() {
+            let dir = $(".select-dir").children("a").text();
+            if (dir === "")
+            {
+                alert("请选择上传目录。");
+                return
+            }
+            let form_data = new FormData($("#upload-img-form")[0]);
+            form_data.append("img", $("[name='img']").get(0).files[0]);
+            form_data.append("dir", dir);
+
+            console.log(form_data);
+            $.ajax({
+                url: "/upload_image/",
+                method:"POST",
+                contentType:false,
+                data: form_data,
+                processData:false,
+                dataType: "json",
+            }).done(function (res) {
+                if (res.code ===0) {
+                    alert("上传成功");
+                }
+            }).fail(function (e) {
+                console.error(e);
+            });
+        }
+
+        function save_good(is_sell=false) {
+            let image_lst = [];
+            $("#content article img").each(function (index) {
+                image_lst.push({
+                    id: $(this).attr("data-id"),
+                    index: index
+                });
+            });
+
+            let size_lst = [];
+            $("#size-table tbody tr").each(function (index) {
+                let trs = $(this).children("td");
+                size_lst.push({
+                    index: index,
+                    size: trs.eq(0).text(),
+                    add_amount: Number(trs.eq(2).text()),
+                })
+            });
+
+            let content = "<ul>";
+            let lis = $(".product-text ul li");
+            for(let i = 0; i < lis.length; i++) {
+                content += "<li>" + lis.eq(i).text() + "</li>";
+            }
+            content += "</ul>";
+
+            let collections = [];
+            $(".product-label .select").each(function () {
+                collections.push($(this).text());
+            });
+
+            let post_data = {
+                title: $(".title").text(),
+                price: Number($(".product-price").text().substring(1)),
+                content: content,
+                images: image_lst,
+                sizes: size_lst,
+                is_sell: is_sell,
+                collections: collections,
+            };
+            $.ajax({
+                url: "save/",
+                method:"POST",
+                dataType: "json",
+                data: JSON.stringify(post_data),
+                contentType: "application/json",
+                timeout:5000
+            }).done(function (res) {
+                if (res.code===0){
+                    window.location = window.location;
+                }else{
+                    alert(res.msg);
+                }
+            }).fail(function (e) {
+                console.log(e);
+                alert("保存失败，请重试")
+            });
+        }
+
+        function down_good() {
+            $.ajax({
+                    url: "down/",
+                    method: "POST",
+                    dataType: "json",
+                    timeout: 5000
+                }).done(function (res) {
+                    if (res.code === 0) {
+                        // 跳转
+                        window.location = window.location;
+                    } else {
+                        alert(res.msg);
+                    }
+                }).fail(function (e) {
+                    console.log(e);
+                    alert("删除失败，请重试");
+                });
+        }
+
+        function remove_good() {
+            if (confirm("删除后将无法恢复，确定删除该草稿？")) {
+                $.ajax({
+                    url: "remove/",
+                    method: "POST",
+                    dataType: "json",
+                    timeout: 5000
+                }).done(function (res) {
+                    if (res.code === 0) {
+                        // 跳转
+                        window.location.href = res.redirect;
+                    } else {
+                        alert(res.msg);
+                    }
+                }).fail(function (e) {
+                    console.log(e);
+                    alert("删除失败，请重试");
+                });
+            }
+        }
+
+        function _new_dir() {
+            $.ajax({
+                url: "/dir/new/",
+                method:"POST",
+                dataType:"json",
+            });
+
+            $("#dir-list ul").append("<li><span class=\"glyphicon glyphicon-folder-open\" aria-hidden=\"true\"></span> <a onclick=\"select_dir(this)\">输入文件夹名字</a></li>");
+
+        }
+        function _remove_dir() {
+            $(".select-dir").remove()
+        }
+
+        function get_more_cloud_images() {
+            let page = Number($("#show-images").attr("data-page")) + 1;
+
+            $.ajax({
+                url: "/images/",
+                dataType: "json",
+                data:{
+                    dir: $(".select-dir a").text().replace(" ", ""),
+                    page: page,
+                },
+                method: "GET",
+                timeout: 5000
+            }).done(function (res) {
+                console.log(res);
+                if (res.code === 0){
+                    let container = $("#show-images");
+                    container.attr("data-page", res.page);
+                    let data = res.data;
+                    for (let i =0; i < data.length; i++){
+                        let row = data[i];
+                        let node = article_cloud_image_node();
+                        node.find("img").attr("src", "/" + row["url"]).attr("data-id", row["id"]);
+                        node.find("a").text(row["file_name"]);
+                        container.append(node);
+                    }
+                }
+                else{
+                    alert("请求失败，请重试")
+                }
+            }).fail(function (e) {
+                console.log(e);
+                alert("请求失败，请重试")
+            })
+        }
+
+        function select_dir(that) {
+            $(that).parent().addClass("select-dir").siblings().removeClass("select-dir");
+
+            $("#show-images").empty().attr("data-page", "0");
+            get_more_cloud_images();
+        }
+        function when_scroll(that, callback) {
+            let scrollTop = $(that).scrollTop();
+            let ks_area = $(that).innerHeight();
+            let nScrollHight = 0; //滚动距离总长(注意不是滚动条的长度)
+            nScrollHight = $(that)[0].scrollHeight;
+            if(scrollTop + ks_area >= nScrollHight){
+                callback()
+            }
+        }
+    </script>
+{% endblock %}

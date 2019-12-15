@@ -1,0 +1,34 @@
+{% extends "base-sider.html" %}
+{% load static %}
+
+{% block content %}
+    <table class="table table-hover">
+        <caption>
+            <h3>订单报表文件</h3>
+        </caption>
+        <thead>
+            <tr>
+                <td>文件名</td>
+                <td>数据条数</td>
+                <td>是否生成</td>
+                <td>下载次数</td>
+                <td>生成时间</td>
+                <td>操作</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in reports %}
+            <tr>
+                <td>{{ r.filename }}</td>
+                <td>{{ r.count }}</td>
+                <td>{% if r.is_finish %}已生成{% else %}正在生成{% endif %}</td>
+                <td>{{ r.download_count }}</td>
+                <td>{{ r.create_time }}</td>
+                <td>
+                    <a type="button" class="btn btn-default" target="_blank" href="{{ r.id }}/"><span class="glyphicon glyphicon-download"></span> 下载</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

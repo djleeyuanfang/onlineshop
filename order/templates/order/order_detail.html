@@ -1,0 +1,246 @@
+{% extends "base-sider.html" %}
+{% load static %}
+
+{% block css %}
+    <link href="{% static 'css/cart.css' %}" rel="stylesheet">
+{% endblock %}
+
+
+{% block content %}
+        {% if user.is_admin %}
+        <div style="margin-bottom: 30px">管理员操作：
+            <button type="button" class="btn btn-sm btn-default" onclick="ship()">发货</button>
+            <button type="button" class="btn btn-sm btn-default" onclick="edit_mode()">进入编辑模式</button>
+            <button type="button" class="btn btn-sm btn-default" onclick="exit_edit_mode()">取消编辑模式</button>
+            <button type="button" class="btn btn-sm btn-default" onclick="save_info()">保存订单信息</button>
+        </div>
+        {% endif %}
+        <table class="table table-hover">
+        <tr data-address="{{ order.address }}">
+            <td>
+                <div>
+                    <div style="display:inline">收货人：</div>
+                    <div class="address can-edit" style="display:inline">请填写信息</div>
+                </div>
+                <div>
+                    <div style="display:inline">手机号码：</div>
+                    <div class="address can-edit" style="display:inline">请填写信息</div>
+                </div>
+                <div>
+                    <div style="display:inline">所在地区：</div>
+                    <div class="address can-edit" style="display:inline">请填写信息</div>
+                </div>
+            </td>
+            <td colspan="2">
+                详细地址：<div class="address can-edit">请填写信息</div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            物流单号：
+            <div class="can-edit" id="express-number">{{ order.express_number }}</div>
+            </td>
+            <td>
+            物流公司：
+            <div class="can-edit" id="express-cmp">{{ order.express_cmp }}</div>
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>
+            订单创建时间：
+            <div>{{ order.create_time }}</div>
+            </td>
+            <td>
+            订单付款时间：
+            <div>{{ order.pay_time }}</div>
+            </td>
+            <td>订单发货时间：
+            <div>{{ order.ship_time }}</div>
+            </td>
+        </tr>
+        {% for item in order_items %}
+            <tr>
+                <td><img width="120" id="main-image" src="/{{ item.good.first_image_url }}"></td>
+                <td>
+                    <div class="text-left">
+                        <div class="titles">{{ item.good.title }}</div>
+                        <div>{{ item.size }}</div>
+                        <div class="price">￥{{ item.good.price }}</div>
+                    </div>
+                </td>
+                <td>&times; {{ item.amount }}</td>
+            </tr>
+        {% endfor %}
+        </table>
+        <div class="sum text-center">
+            <div id="total-price" class="can-edit">合计：￥{{ order.cash }}</div>
+            <div id="order-status" data-status="{{order.status}}">{{order.get_status_display}}</div>
+            <div class="status">
+                <div class="status-op SUMMIT">
+                    <button type="button" class="btn btn-sm btn-default" onclick="pay()">确认收货信息并付款</button>
+                    <button type="button" class="btn btn-sm btn-default" onclick="cancel_order()">取消订单</button>
+                </div>
+                <div class="status-op PAY" >
+                    <button type="button" class="btn btn-sm btn-default">催促发货</button>
+                </div>
+            </div>
+        </div>
+{% endblock %}
+{% block js %}
+    <script type="text/javascript">
+        {% if user.is_admin %}
+        function edit_mode() {
+            $(".can-edit").attr("contenteditable", "true").addClass("text-danger");
+        }
+        function exit_edit_mode() {
+            $(".can-edit").attr("contenteditable", "false").removeClass("text-danger");
+        }
+        function save_info() {
+            let address = check_address();
+            let price_str = $("#total-price").text().replace(/\s/g, '');
+            if (address) {
+                $.ajax({
+                    url: "save/",
+                    dataType: "json",
+                    method: "POST",
+                    data: {
+                        address: address,
+                        express_number: $("#express-number").text().replace(/\s/g, ''),
+                        express_cmp: $("#express-cmp").text().replace(/\s/g, ''),
+                        cash: price_str.substring(price_str.indexOf("￥") + 1)
+                    },
+                    timeout: 5000,
+                }).done(function (res) {
+                    if(res.code === 0){
+                        alert("修改成功")
+                    }
+                    else{
+                        alert(res.msg);
+                    }
+                }).fail(function (e) {
+                    console.error(e);
+                    alert("修改失败");
+                })
+            }
+        }
+        function ship() {
+            let express_number = $("#express-number").text().replace(/\s/g, '');
+            let express_cmp = $("#express-cmp").text().replace(/\s/g, '');
+
+            if (express_number.indexOf("暂无") > -1 || express_cmp.indexOf("暂无") > -1){
+                alert("请输入正确的物流信息");
+                return;
+            }
+
+            $.ajax({
+                url: "ship/",
+                dataType: "json",
+                method: "POST",
+                data: {
+                    express_number: express_number,
+                    express_cmp: express_cmp,
+                },
+                timeout: 5000,
+            }).done(function (res) {
+                if(res.code === 0){
+                    alert("发货成功")
+                }
+                else{
+                    alert(res.msg);
+                }
+            }).fail(function (e) {
+                console.error(e);
+                alert("发货失败");
+            })
+        }
+        {% endif %}
+
+        $(document).ready(function () {
+            // 处理地址信息
+            let address = $("[data-address]").attr("data-address");
+            if (address.indexOf("填写") > -1){
+                $(".address").html('<text class="text-danger">请点击填写</text>');
+            }
+            else{
+                let address_lst = address.split("/");
+                $(".address").each(function (index) {
+                    $(this).text(address_lst[index]);
+                })
+            }
+
+            let status = $("#order-status").attr("data-status");
+            if (status === "SUMMIT") {
+                $(".address").attr("contenteditable", "true");
+                $(".SUMMIT").show().siblings().hide();
+            }
+            else if(status === "PAY") {
+                $(".PAY").show().siblings().hide();
+            }
+            else if(status === "CANCEL") {
+                $(".status-op").hide();
+            }
+            else{
+                $(".status-op").hide();
+            }
+
+        });
+        function check_address() {
+            let address_lst = [];
+            $(".address").each(function (index) {
+               address_lst.push($(this).text().replace(/\s|\//g, ''));
+            });
+            let address = address_lst.join("/");
+            console.log(address);
+            if (address.indexOf("填写") > -1){
+                alert("请输入正确的地址");
+                return false;
+            }
+            else{
+                return address.replace(/\s/g, '');
+            }
+        }
+
+        function pay() {
+            let address = check_address();
+            if (address){
+                $.ajax({
+                    url: "pay/",
+                    method: "POST",
+                    data:{
+                        address: address
+                    },
+                    dataType: "json",
+                    timeout: 5000
+                }).done(function (res) {
+                    if (res.code === 0){
+                        window.location = location;
+                    }else{
+                        alert(res.msg);
+                    }
+                }).fail(function (e) {
+                    console.error(e);
+                    alert("提交失败，请重试")
+                })
+            }
+        }
+        function cancel_order() {
+            $.ajax({
+                    url: "cancel/",
+                    method: "POST",
+                    dataType: "json",
+                    timeout: 5000
+                }).done(function (res) {
+                    if (res.code === 0){
+                        window.location = location;
+                    }else{
+                        alert(res.msg);
+                    }
+                }).fail(function (e) {
+                    console.error(e);
+                    alert("提交失败，请重试")
+                })
+        }
+
+    </script>
+{% endblock %}

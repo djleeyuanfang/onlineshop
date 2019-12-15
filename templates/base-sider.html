@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+{% load static %}
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+
+    <link rel="icon" href="">
+    <title>Djlee Online Shopping | </title>
+
+    <link href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.css' %}" rel="stylesheet">
+
+    <link href="{% static 'css/bootstrap-datetimepicker.min.css' %}" rel="stylesheet">
+{#    <link href="{% static 'css/bootstrap-fix-1.1.css' %}" rel="stylesheet">#}
+
+    <link href="{% static 'css/nav-sider.css' %}" rel="stylesheet">
+
+    {% block css %}
+    {% endblock %}
+</head>
+<body>
+
+    <div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+            <div><h2 class="sub-header">Djlee | {% if user.is_admin %}管理员{% endif %}</h2></div>
+            {% if user.is_authenticated and user.is_admin %}
+                <ul class="nav nav-sidebar">
+                    <li><a href="/manager/add_good/">新建商品</a></li>
+                    <li><a href="/manager/good/">草稿商品</a></li>
+                    <li><a href="/manager/order/">订单管理</a></li>
+                    <li><a href="/manager/sell/">销售管理</a></li>
+                    <li><a href="/manager/user/">客户管理</a></li>
+                </ul>
+            {% endif %}
+            <ul class="nav nav-sidebar">
+                {% if user.is_authenticated and user.is_admin %}<li><a href="/manager/collection/">管理标签</a></li>{% endif %}
+                <li class="active"><a href="/collection/all/">全部</a></li>
+                {% for c in collections %}
+                <li><a href="/collection/{{ c.label }}/">{{ c.name }}</a></li>
+                {% endfor %}
+            </ul>
+            <ul class="nav nav-sidebar">
+                <li><a href="/cart/">购物车</a></li>
+            </ul>
+            <ul class="nav nav-sidebar">
+                {% if user.is_authenticated %}
+                    <li><a href="/order/">我的订单</a></li>
+                    <li><a href="/login/out/">注销</a></li>
+                {% else %}
+                    <li><a href="/login/">请登录</a></li>
+                    <li><a href="/login/register/">注册或找回密码</a></li>
+                {% endif %}
+            </ul>
+            <footer class="footer">
+                <p>&copy; 2019 Djlee Online Shopping, Inc.</p>
+            </footer>
+        </div>
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+    </div>
+
+    <script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'bootstrap-3.3.7-dist/js/bootstrap.js' %}"></script>
+    <script src="{% static 'js/utils-1.2.js' %}"></script>
+    <script type="text/javascript">
+        $(".nav-sidebar li").removeClass("active");
+        $(".nav-sidebar li a").each(function (index) {
+            if (window.location.pathname.startsWith($(this).attr("href"))){
+                $(this).parent().addClass("active");
+            }
+        })
+    </script>
+    {% block js %}
+    {% endblock %}
+</body>
+</html>

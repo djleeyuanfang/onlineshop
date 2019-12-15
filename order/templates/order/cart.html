@@ -1,0 +1,139 @@
+{% extends "base-sider.html" %}
+{% load static %}
+
+{% block css %}
+    <link href="{% static 'css/cart.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+        <table class="table table-hover" id="cart-table">
+        {% for cart in carts %}
+            <tr data-id="{{ cart.id }}">
+                <td><img width="120" id="main-image" src="/{{ cart.good.first_image_url }}"></td>
+                <td>
+                    <div class="text-left">
+                        <div class="titles">{{ cart.good.title }}</div>
+                        <div>{{ cart.size }}</div>
+                        <div class="price">￥{{ cart.good.price }}</div>
+                    </div>
+                </td>
+                <td>
+                    <div class="row">
+                     <div class="col-lg-6">
+                       <div class="input-group">
+                         <span class="input-group-btn">
+                           <button class="btn btn-default" type="button" onclick="down_amount(this)">-</button>
+                         </span>
+                         <input type="text" class="form-control" value="{{ cart.amount }}" onchange="cac()">
+                         <span class="input-group-btn">
+                           <button class="btn btn-default" type="button" onclick="up_amount(this)">+</button>
+                         </span>
+                       </div>
+                     </div>
+                    </div>
+                </td>
+                <td><button type="button" class="btn btn-sm btn-default btn-block" onclick="remove_cart(this)">删除</button></td>
+            </tr>
+        {% endfor %}
+        </table>
+        <div class="sum text-center">
+            <div id="total-price"></div>
+            <div id="total-amount"></div>
+            <button type="button" class="btn btn-sm btn-default" onclick="submit_order()">提交订单</button>
+        </div>
+{% endblock %}
+{% block js %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            cac();
+            cac_amount();
+        });
+        function cac() {
+            let total_price = .0;
+            $("tr").each(function (index) {
+                total_price += Number($(this).find(".price").text().substring(1)) * Number($(this).find("input").val());
+            });
+            $("#total-price").text("总额：￥" + Math.round(total_price * 100) / 100);
+        }
+        function cac_amount() {
+            $("#total-amount").text("共 " + $("tr").length + " 种商品");
+        }
+        function down_amount(that) {
+            let node = $(that).parents("tr");
+            let input = node.find("input");
+            let amount = Number(input.val());
+            if (amount > 1){
+                amount--;
+                update(node.attr("data-id"), amount);
+            }
+        }
+        function up_amount(that) {
+            let node = $(that).parents("tr");
+            let input = node.find("input");
+            let amount = Number(input.val()) + 1;
+            update(node.attr("data-id"), amount);
+        }
+        function remove_cart(that) {
+            let node = $(that).parents("tr");
+            update(node.attr("data-id"));
+        }
+        function update(id, amount = 0) {
+            $.ajax({
+                url: "/cart/change/",
+                method: "POST",
+                dataType: "json",
+                data:{
+                    "id": id,
+                    "amount": amount
+                },
+                timeout:5000,
+            }).done(function (res) {
+                if (res.code === 0){
+                    let node = $("[data-id='" + res.data.id + "'");
+                    let amount = res.data.amount;
+                    if (amount === 0){
+                        node.remove();
+                        cac();
+                        cac_amount();
+                    }
+                    else{
+                        node.find("input").val(res.data.real_amount);
+                        cac();
+                        if (res.data.real_amount < amount) {
+                            alert("库存达到上限")
+                        }
+                    }
+                }
+                else{
+                    alert("修改失败");
+                }
+            }).fail(function (e) {
+                console.error(e);
+                alert("修改失败");
+            })
+        }
+        function submit_order() {
+            if ($("#cart-table tr").length === 0)
+            {
+                alert("没有提交的商品");
+                return;
+            }
+            $.ajax({
+                url: "/cart/submit/",
+                method: "POST",
+                dataType: "json",
+                timeout:5000,
+            }).done(function (res) {
+                if (res.code === 0){
+                    alert("提交成功");
+                }
+                else{
+                    alert(res.msg)
+                }
+            }).fail(function (e) {
+                console.error(e);
+                alert("提交失败");
+            })
+        }
+    </script>
+{% endblock %}

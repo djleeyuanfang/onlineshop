@@ -1,0 +1,64 @@
+{% extends "base-sider.html" %}
+{% load static %}
+
+{% block css %}
+    <link href="{% static 'css/bootstrap-table.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/shop-item.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4>查询客户</h4>
+        </div>
+        <div class="panel-body">
+            <form id="search-user-form">
+                <div class="row">
+                    <div class="col-sm-6 form-group">
+                        <label for="mail">邮箱</label>
+                        <input type="text" class="form-control" id="mail" name="mail" placeholder="输入客户邮箱">
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label for="phone">手机号码</label>
+                        <input type="text" class="form-control" id="phone" name="phone" placeholder="输入手机号码">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 form-group">
+                        <label for="from_create_time">客户注册起始时间</label>
+                        <input type="text" class="form-control bdatetime" id="from_create_time" name="from_create_time" placeholder="输入客户注册起始时间">
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label for="to_create_time">客户注册截止时间</label>
+                        <input type="text" class="form-control bdatetime" id="to_create_time" name="to_create_time" placeholder="输入客户注册截止时间">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="search-user-table-toolbox">
+        <button class="btn btn-default" onclick="search_user()"><span class="glyphicon glyphicon-search"></span> 查询</button>
+    </div>
+    <table id="user-table"></table>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/bootstrap-table.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap-table-zh-CN.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap-datetimepicker.js' %}"></script>
+    <script src="{% static 'js/manage-user.js' %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $(".bdatetime").datetimepicker({
+                minView: 0,
+                startView: 2,
+                autoclose: 1,
+                format: 'yyyy-mm-dd hh:ii'
+                // startDate: new Date(new Date().getTime()).format("yyyy-MM-dd hh:mm")
+            });
+        });
+        function search_user() {
+            $("#user-table").bootstrapTable("refresh");
+        }
+    </script>
+{% endblock %}

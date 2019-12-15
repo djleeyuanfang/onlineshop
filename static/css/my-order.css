@@ -1,0 +1,12 @@
+.order-container > ul{
+    list-style-type:none;
+}
+
+table > thead{
+    background-color: #ddd;
+}
+
+table > tfoot{
+    background-color: #eee;
+
+}

@@ -1,0 +1,45 @@
+{% extends "base-sider.html" %}
+{% load static %}
+
+{% block css %}
+    <link href="{% static 'css/login.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+    <form class="form-signin" id="login-form">
+{#        <h2 class="form-signin-heading">登 录</h2>#}
+        <label for="inputEmail" class="sr-only">邮箱地址</label>
+        <input type="email" id="inputEmail" name="mail" class="form-control" placeholder="邮箱地址" required autofocus>
+        <label for="inputPassword" class="sr-only">密码</label>
+        <input type="password" id="inputPassword" name="passwd" class="form-control" placeholder="密码" required>
+{#        <div class="checkbox">#}
+{#        <label>#}
+{#            <input type="checkbox" value="remember-me"> 记住我#}
+{#        </label>#}
+{#        </div>#}
+        <button type="button" class="btn btn-lg btn-default btn-block" onclick="login()">登录</button>
+  </form>
+    </div>
+{% endblock %}
+{% block js %}
+    <script type="text/javascript">
+    function login() {
+        $.ajax({
+            url: "/login/",
+            method: "POST",
+            data: $("#login-form").serialize(),
+            timeout:5000
+        }).done(function (res) {
+            if (res.code === 0){
+                window.location.href = res.redirect;
+            }
+            else{
+                alert(res.msg);
+            }
+        }).fail(function (e) {
+            alert("失败，请重试");
+        });
+    }
+    </script>
+{% endblock %}
