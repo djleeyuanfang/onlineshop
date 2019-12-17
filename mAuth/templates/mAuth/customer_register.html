@@ -28,6 +28,10 @@
             $(".register-hide").hide();
 
             $("#mailCode").click(function () {
+                if ($("#inputEmail").val() === ""){
+                    return ;
+                }
+
                 $(".code-hide").hide();
                 $.ajax({
                     url: "/login/mail_code/",

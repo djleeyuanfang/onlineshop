@@ -42,7 +42,7 @@ def login_required_json(func):
     return wrapper
 
 
-def collection(req, label):
+def collection(req, label="all"):
     if req.GET.get("page", None):
         # 草稿商品的列表
         page = req.GET["page"]
@@ -217,19 +217,18 @@ def order_operation(req, order_id, op):
         elif op == "ship" and req.user.is_admin:
             try:
                 order = Order.objects.get(id=order_id)
-                msg = '''订单号：{}\n
-                金额 ：￥{}\n
-                物流公司：{}\n
-                物流单号：{}\n
-                寄送地址：{}\n
-                '''.format(order.id, order.cash, order.express_cmp, order.express_number,
-                           order.address.replace("/", " "))
+
+                order.status = Order.SHIP
+                order.express_number = req.POST["express_number"]
+                order.express_cmp = req.POST["express_cmp"]
+                order.ship_time = datetime.datetime.now()
+
+                msg = '''订单号：{}\n\n金额 ：￥{}\n\n物流公司：{}\n\n物流单号：{}\n\n寄送地址：{}\n\n发货时间：{}'''\
+                    .format(order.id, order.cash, order.express_cmp, order.express_number,
+                           order.address.replace("/", " "), order.ship_time.strftime("%Y-%m-%d %H:%M:%S"))
                 send_mail("[DjleeOnlineShop]发货提醒", msg, settings.EMAIL_HOST_USER, [order.user.mail])
 
-                order.status = Order.SHIP,
-                order.express_number = req.POST["express_number"],
-                order.express_cmp = req.POST["express_cmp"],
-                order.ship_time = datetime.datetime.now()
+                order.save()
                 return json_response(0, "success")
             except Exception as e:
                 return json_response(1, "发货失败，请稍后重试")

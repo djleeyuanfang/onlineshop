@@ -144,7 +144,8 @@
                 timeout: 5000,
             }).done(function (res) {
                 if(res.code === 0){
-                    alert("发货成功")
+                    alert("发货成功");
+                    window.location = window.location
                 }
                 else{
                     alert(res.msg);
