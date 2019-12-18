@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" serverName="onlineshop">
+  <component name="PublishConfigData" serverName="onlineshop" uploadOnCheckin="bfd729fc-f24f-4271-aa1f-d12f1d6aeca3">
     <serverData>
       <paths name="onlineshop">
         <serverdata>
@@ -10,5 +10,6 @@
         </serverdata>
       </paths>
     </serverData>
+    <option name="myUploadOnCheckinName" value="onlineshop" />
   </component>
 </project>
