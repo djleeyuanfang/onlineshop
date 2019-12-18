@@ -84,6 +84,9 @@
                 <div class="status-op PAY" >
                     <button type="button" class="btn btn-sm btn-default">催促发货</button>
                 </div>
+                <div class="status-op SHIP" >
+                    <button type="button" class="btn btn-sm btn-default" onclick="confirm_order()">确认签收</button>
+                </div>
             </div>
         </div>
 {% endblock %}
@@ -181,6 +184,9 @@
             else if(status === "CANCEL") {
                 $(".status-op").hide();
             }
+            else if(status === "SHIP") {
+                $(".SHIP").show().siblings().hide();
+            }
             else{
                 $(".status-op").hide();
             }
@@ -228,6 +234,23 @@
         function cancel_order() {
             $.ajax({
                     url: "cancel/",
+                    method: "POST",
+                    dataType: "json",
+                    timeout: 5000
+                }).done(function (res) {
+                    if (res.code === 0){
+                        window.location = location;
+                    }else{
+                        alert(res.msg);
+                    }
+                }).fail(function (e) {
+                    console.error(e);
+                    alert("提交失败，请重试")
+                })
+        }
+        function confirm_order() {
+            $.ajax({
+                    url: "complete/",
                     method: "POST",
                     dataType: "json",
                     timeout: 5000

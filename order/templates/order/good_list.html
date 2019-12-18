@@ -1,0 +1,63 @@
+{% extends "base-sider.html" %}
+{% load static %}
+
+{% block css %}
+    <link href="{% static 'css/bootstrap-table.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/manage-order.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4>查询商品</h4>
+        </div>
+        <div class="panel-body">
+            <form id="search-good-form">
+                <div class="row">
+                        <div class="col-sm-6 form-group">
+                            <label for="good_id">商品号</label>
+                            <input type="text" class="form-control" id="good_id" name="good_id" placeholder="输入商品号">
+                        </div>
+                        <div class="col-sm-6 form-group">
+                            <label for="title">标题</label>
+                            <input type="text" class="form-control" id="title" name="title" placeholder="输入商品标题">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6 form-group">
+                            <label for="collection">分裂标签</label>
+                            <select name="collection" id="collection" class="form-control">
+                                <option value="">全部</option>
+                                {% for c in collections %}
+                                <option value="{{ c.label }}">{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-sm-6 form-group">
+                            <label for="is_sell">在售状态</label>
+                            <select name="is_sell" id="is_sell" class="form-control">
+                                <option value="">全部</option>
+                                <option value="true">在售</option>
+                                <option value="false">下架</option>
+                            </select>
+                        </div>
+                    </div>
+            </form>
+        </div>
+    </div>
+    <div id="search-good-table-toolbox">
+        <button class="btn btn-default" onclick="search_good()"><span class="glyphicon glyphicon-search"></span> 查询</button>
+    </div>
+    <table id="good-table"></table>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/bootstrap-table.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap-table-zh-CN.min.js' %}"></script>
+    <script src="{% static 'js/manage-good.js' %}"></script>
+    <script type="text/javascript">
+        function search_good() {
+            $("#good-table").bootstrapTable("refresh");
+        }
+    </script>
+{% endblock %}

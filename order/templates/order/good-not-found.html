@@ -1,0 +1,9 @@
+{% extends "base-sider.html" %}
+{% load static %}
+
+{% block content %}
+    {% if user.is_authenticated and user.is_admin and good.id%}管理员：<a href="/manager/good/{{ good.id }}/">进入编辑模式</a>{% endif %}
+    <div class="text-center">
+        <h1>商品不存在或已下架</h1>
+    </div>
+{% endblock %}

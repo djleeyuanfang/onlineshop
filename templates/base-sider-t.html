@@ -28,6 +28,7 @@
             <div><h2 class="sub-header">Djlee{% if user.is_admin %} | 管理员{% endif %}</h2></div>
             {% if user.is_authenticated and user.is_admin %}
                 <ul class="nav nav-sidebar">
+                    <li><a href="/manager/goods/">商品管理</a></li>
                     <li><a href="/manager/add_good/">新建商品</a></li>
                     <li><a href="/manager/good/">草稿商品</a></li>
                     <li><a href="/manager/order/">订单管理</a></li>

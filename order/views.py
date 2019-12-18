@@ -62,11 +62,19 @@ def collection(req, label="all"):
 
 
 def view_good(req, good_id):
-    good = Good.objects.get(id=good_id, is_sell=True)
-    if req.user and req.user.is_authenticated:
-        # 增加浏览记录
-        GoodTrack.objects.create(good=good, user=req.user)
-    return render(req, "order/item_detail.html", {"good": good})
+    try:
+        good = Good.objects.get(id=good_id)
+        if good.is_sell:
+            if req.user and req.user.is_authenticated:
+                # 增加浏览记录
+                GoodTrack.objects.create(good=good, user=req.user)
+            return render(req, "order/item_detail.html", {"good": good})
+        else:
+            # 下架了
+            return render(req, "order/good-not-found.html", {"good": good})
+    except Good.DoesNotExist:
+        # 商品不存在
+        return render(req, "order/good-not-found.html")
 
 
 @login_required
@@ -206,8 +214,21 @@ def order_operation(req, order_id, op):
                 address=req.POST.get("address", "未填写"), status=Order.PAY, pay_time=datetime.datetime.now())
             return json_response(0, "success")
         elif op == "cancel":
-            Order.objects.filter(id=order_id).update(status=Order.CANCEL)
-            return json_response(0, "success")
+            try:
+                with transaction.atomic():
+                    # 行锁 出错 rollback 会释放行锁
+                    order = Order.objects.select_for_update().get(id=order_id, status=Order.SUMMIT)
+                    order.status = Order.CANCEL
+                    order.save()
+
+                    # 还要把商品数量加回去
+                    for item in order.orderitem_set.all():
+                        GoodSize.objects.filter(good=item.good, size=item.size).update(amount=F("amount") + item.amount)
+                    return json_response(0, "取消成功")
+            except Order.DoesNotExist:
+                return json_response(2, "订单已更新或不存在订单")
+            except Exception:
+                return json_response(3, "更新失败")
         elif op == "save" and req.user.is_admin:
             Order.objects.filter(id=order_id).update(address=req.POST["address"],
                                                      cash=req.POST["cash"],
@@ -232,6 +253,13 @@ def order_operation(req, order_id, op):
                 return json_response(0, "success")
             except Exception as e:
                 return json_response(1, "发货失败，请稍后重试")
+        elif op == "complete":
+            # 订单完成
+            Order.objects.filter(id=order_id, status=Order.SHIP).update(
+                status=Order.COMPLETE,
+                complete_time=datetime.datetime.now()
+            )
+            return json_response(0, "success")
 
 
 @manager_login_required
@@ -300,9 +328,70 @@ def manager_good(req, good_id):
         pass
 
 
-@login_required
 @manager_login_required
-@csrf_exempt
+def good_lst_page(req):
+    if req.method == "GET":
+        return render(req, "order/good_list.html")
+
+
+@manager_login_required
+def good_lst(req):
+    if req.method == "GET":
+        page_num = int(req.GET.get("page_num", 1))
+        page_size = int(req.GET.get("page_size", 15))
+
+        param = dict()
+        good_id = req.GET.get('good_id', "")
+        good_title = req.GET.get('title', "")
+        is_sell = req.GET.get('is_sell', "")
+        c = req.GET.get('collection', "")
+        if len(good_id):
+            param["id"] = int(good_id)
+        if len(good_title):
+            param["title__contains"] = good_title
+        if len(is_sell):
+            param["is_sell"] = is_sell == "true"
+        if len(c):
+            param["collections__label"] = c
+        print(param)
+        objs = Good.objects.filter(**param).order_by("id")
+        p = Paginator(objs, page_size)
+        page = p.get_page(page_num)
+
+        # 一个月前
+        before_one_month = datetime.datetime.now() - datetime.timedelta(days=30)
+        # 一周前
+        before_one_week = datetime.datetime.now() - datetime.timedelta(days=7)
+
+        res = []
+        for good in page.object_list:
+            res.append({
+                "good_id": good.id,
+                "first_img": good.first_image_url,
+                "title": good.title,
+                "price": good.price,
+                "collections": [c.name for c in good.collections.all()],
+                "is_sell": good.is_sell,
+                "sizes": [{
+                    "amount": size.amount,
+                    "size": size.size
+                } for size in good.goodsize_set.order_by("index")],
+                "total_sell_amount": good.orderitem_set.filter(
+                    order__status=Order.COMPLETE
+                ).aggregate(amount=Count("amount")).get("amount", 0),
+                "month_sell_amount": good.orderitem_set.filter(
+                    order__status=Order.COMPLETE,
+                    order__complete_time__gte=before_one_month
+                ).aggregate(amount=Count("amount")).get("amount", 0),
+                "week_sell_amount": good.orderitem_set.filter(
+                    order__status=Order.COMPLETE,
+                    order__complete_time__gte=before_one_week
+                ).aggregate(amount=Count("amount")).get("amount", 0),
+            })
+        return json_response(0, "success", total=p.count, rows=res)
+
+
+@manager_login_required
 def add_good(req):
     if req.method == "GET":
         # 创建草稿

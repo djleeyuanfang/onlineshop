@@ -17,6 +17,8 @@ urlpatterns = [
     path("upload_image/", views.upload_image),
     path("images/", views.get_images),
     path("upload_img/", views.upload_image),
+    path("manager/goods/", views.good_lst_page),
+    path("manager/goods/query/", views.good_lst),
     path("manager/add_good/", views.add_good),
     path("manager/good/", views.edit_goods),
     path("manager/good/<good_id>/", views.manager_good),

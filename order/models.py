@@ -168,6 +168,7 @@ class Order(models.Model):
     create_time = models.DateTimeField(auto_now_add=True, verbose_name="订单创建时间")
     pay_time = models.DateTimeField(null=True, verbose_name="订单付款时间")
     ship_time = models.DateTimeField(null=True, verbose_name="订单发货时间")
+    complete_time = models.DateTimeField(null=True, verbose_name="订单成交时间")
 
     @property
     def order_item(self):
